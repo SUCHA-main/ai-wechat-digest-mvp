@@ -31,6 +31,15 @@
 - 新增单个数据源测试抓取，可预览前 5 篇文章，不影响数据库。
 - 前端支持“测试抓取”和“抓取全部 RSS”，并展示 imported/skipped/failedSources 统计。
 
+## 第五阶段新增功能
+
+- 新增晚报推送模块：`console`、`pushplus`、`email`。
+- 默认 `PUSH_PROVIDER=console`，只在控制台打印晚报，不会真实发送。
+- 新增手动推送 API：`POST /api/push/today`。
+- 新增推送配置查询 API：`GET /api/config/push`，不返回 token/password。
+- 定时任务增强：开启后每天 22:30 自动抓取 RSS、生成晚报，并可选推送。
+- 默认不自动推送，避免调试时误发。
+
 ## 项目结构
 
 ```text
@@ -40,6 +49,7 @@ backend/
     db.js
     fetcher.js
     aiProvider.js
+    pusher.js
     summarizer.js
     scheduler.js
     digest.js
@@ -84,15 +94,26 @@ npm run dev
 ```env
 PORT=3090
 ENABLE_SCHEDULER=false
+ENABLE_DAILY_PUSH=false
 AI_PROVIDER=mock
 AI_API_BASE_URL=
 AI_API_KEY=
 AI_MODEL=
 OLLAMA_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen2.5:3b
+PUSH_PROVIDER=console
+PUSHPLUS_TOKEN=
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+SMTP_TO=
 ```
 
-`scheduler.js` 已预留每天 `22:30` 自动生成晚报的逻辑，默认关闭，避免调试干扰。
+`ENABLE_SCHEDULER=true` 表示开启每天 `22:30` 的定时任务，流程包括抓取 RSS 和生成晚报。
+
+`ENABLE_DAILY_PUSH=true` 只在 `ENABLE_SCHEDULER=true` 时生效，表示定时任务生成晚报后自动推送。默认关闭，避免调试时误发。
 
 ## AI Provider 配置
 
@@ -139,6 +160,39 @@ OLLAMA_MODEL=qwen2.5:3b
 
 无论使用 `deepseek` 还是 `ollama`，如果请求失败、超时、模型返回非 JSON、JSON 字段不符合要求，系统都会自动 fallback 到 mock，避免文章导入、重新总结或晚报生成失败。
 
+## 推送配置
+
+### console 模式
+
+默认模式，不需要任何 token 或邮箱配置，只会把今日晚报打印到服务端控制台：
+
+```env
+PUSH_PROVIDER=console
+```
+
+### PushPlus 模式
+
+```env
+PUSH_PROVIDER=pushplus
+PUSHPLUS_TOKEN=你的 PushPlus Token
+```
+
+如果缺少 `PUSHPLUS_TOKEN`，推送 API 会返回明确错误，不会让服务崩溃，也不会打印 token。
+
+### SMTP 邮箱模式
+
+```env
+PUSH_PROVIDER=email
+SMTP_HOST=smtp.example.com
+SMTP_PORT=465
+SMTP_USER=your@example.com
+SMTP_PASS=你的邮箱授权码或密码
+SMTP_FROM=your@example.com
+SMTP_TO=target@example.com
+```
+
+如果 SMTP 配置缺失，推送 API 会返回缺失字段，不会打印 `SMTP_PASS`。
+
 ## API 列表
 
 | 方法 | 路径 | 说明 |
@@ -153,9 +207,11 @@ OLLAMA_MODEL=qwen2.5:3b
 | PATCH | `/api/sources/:id` | 更新数据源名称、URL、类型或启用状态 |
 | DELETE | `/api/sources/:id` | 删除数据源 |
 | GET | `/api/config/ai` | 获取当前 AI 模式，不返回 API Key |
+| GET | `/api/config/push` | 获取当前推送模式，不返回 token/password |
 | GET | `/api/digest/today` | 获取今日晚报 |
 | POST | `/api/fetch` | 手动触发 RSS 抓取 |
 | POST | `/api/digest/generate` | 手动生成今日摘要 |
+| POST | `/api/push/today` | 推送今日晚报 |
 
 ## 数据源配置
 
@@ -225,6 +281,23 @@ curl -X DELETE http://localhost:3090/api/sources/1
 curl -X POST http://localhost:3090/api/sources/1/test-fetch
 ```
 
+## 推送今日晚报
+
+推送前需要先生成今日晚报：
+
+```bash
+curl -X POST http://localhost:3090/api/digest/generate
+curl -X POST http://localhost:3090/api/push/today
+```
+
+查询当前推送配置：
+
+```bash
+curl http://localhost:3090/api/config/push
+```
+
+该接口只返回是否已配置，不返回 `PUSHPLUS_TOKEN`、`SMTP_PASS` 等敏感信息。
+
 ## 测试文章导入
 
 测试文章位于 `backend/data/sample-articles.json`，包含 5 篇模拟文章，主题包括 AI 编程工具、物联网项目、专升本学习、开源项目和普通生活资讯。
@@ -258,6 +331,7 @@ npm run dev
 3. 点击“抓取全部 RSS”
 4. 点击“生成今日晚报”
 5. 查看文章列表和今日晚报结果
+6. 点击“推送今日晚报”验证推送配置
 
 再用 Ollama 验证：
 
@@ -280,6 +354,8 @@ RSS 无法访问：检查 URL 是否能在浏览器打开，是否需要代理�
 AI 总结失败：`deepseek` 或 `ollama` 请求失败时会自动 fallback 到 mock，不会阻断文章入库或晚报生成。
 
 重复文章：系统按文章 URL 去重，重复抓取不会重复写入 `articles` 表。
+
+PushPlus/邮箱推送失败：检查 `PUSH_PROVIDER` 是否正确，以及 token、SMTP 配置是否完整。配置查询接口不会泄露敏感信息。
 
 ## AI 总结 Mock 规则
 

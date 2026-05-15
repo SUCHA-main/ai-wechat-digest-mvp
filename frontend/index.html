@@ -13,13 +13,17 @@
         <h1>公众号文章 AI 晚报</h1>
         <p>当前版本只预留 RSS/JSON 数据源入口，AI 总结为本地 mock。</p>
         <p id="aiMode" class="ai-mode">AI 模式：加载中...</p>
+        <p id="pushMode" class="ai-mode">推送模式：加载中...</p>
         <div class="actions">
           <button id="importSampleBtn">导入测试文章</button>
           <button id="fetchBtn">抓取全部 RSS</button>
           <button id="digestBtn">生成今日晚报</button>
+          <button id="pushBtn">推送今日晚报</button>
           <button id="refreshBtn" class="secondary">刷新</button>
         </div>
       </header>
+
+      <pre id="pushResult" class="result-box top-result">尚未推送今日晚报。</pre>
 
       <section class="card sources-card">
         <div class="section-title">

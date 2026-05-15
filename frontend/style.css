@@ -167,6 +167,10 @@ select {
   color: #4b5563;
 }
 
+.top-result {
+  margin-top: 20px;
+}
+
 .source-item {
   display: flex;
   align-items: center;

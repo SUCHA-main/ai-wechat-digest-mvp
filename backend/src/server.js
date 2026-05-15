@@ -18,6 +18,7 @@ const { generateTodayDigest, getTodayDigest } = require('./digest');
 const { importSampleArticles } = require('./sampleImporter');
 const { summarizeArticle, formatSummary, loadProfile } = require('./summarizer');
 const { getPublicAIConfig } = require('./aiProvider');
+const { getPublicPushConfig, pushDigest } = require('./pusher');
 const { startScheduler } = require('./scheduler');
 
 const app = express();
@@ -73,6 +74,10 @@ app.post('/api/articles/:id/resummarize', async (req, res) => {
 
 app.get('/api/config/ai', (req, res) => {
   res.json({ data: getPublicAIConfig() });
+});
+
+app.get('/api/config/push', (req, res) => {
+  res.json({ data: getPublicPushConfig() });
 });
 
 app.get('/api/sources', (req, res) => {
@@ -149,6 +154,21 @@ app.post('/api/digest/generate', (req, res) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
+});
+
+app.post('/api/push/today', async (req, res) => {
+  const digest = getTodayDigest();
+
+  if (!digest) {
+    res.status(404).json({ ok: false, error: '今日晚报尚未生成' });
+    return;
+  }
+
+  const result = await pushDigest(digest.markdown, {
+    title: `AI 微信公众号晚报 ${digest.digest_date}`
+  });
+
+  res.status(result.ok ? 200 : 400).json({ ok: result.ok, data: result, error: result.ok ? undefined : result.error });
 });
 
 app.listen(port, () => {

@@ -3,9 +3,12 @@ const articlesEl = document.querySelector('#articles');
 const sourcesEl = document.querySelector('#sources');
 const fetchResultEl = document.querySelector('#fetchResult');
 const aiModeEl = document.querySelector('#aiMode');
+const pushModeEl = document.querySelector('#pushMode');
+const pushResultEl = document.querySelector('#pushResult');
 const sourceForm = document.querySelector('#sourceForm');
 const fetchBtn = document.querySelector('#fetchBtn');
 const digestBtn = document.querySelector('#digestBtn');
+const pushBtn = document.querySelector('#pushBtn');
 const importSampleBtn = document.querySelector('#importSampleBtn');
 const refreshBtn = document.querySelector('#refreshBtn');
 
@@ -53,6 +56,18 @@ async function loadAiConfig() {
   aiModeEl.textContent = `AI 模式：${config.provider || 'mock'}${config.model ? ` · ${config.model}` : ''}`;
 }
 
+async function loadPushConfig() {
+  const result = await requestJson('/api/config/push');
+  const config = result.data || {};
+  const configured = config.provider === 'pushplus'
+    ? config.pushplus_configured
+    : config.provider === 'email'
+      ? config.email_configured
+      : true;
+
+  pushModeEl.textContent = `推送模式：${config.provider || 'console'}${configured ? '' : ' · 未完整配置'}`;
+}
+
 async function loadSources() {
   const result = await requestJson('/api/sources');
   const sources = result.data || [];
@@ -81,7 +96,7 @@ async function loadSources() {
 
 async function refreshAll() {
   try {
-    await Promise.all([loadDigest(), loadArticles(), loadSources(), loadAiConfig()]);
+    await Promise.all([loadDigest(), loadArticles(), loadSources(), loadAiConfig(), loadPushConfig()]);
   } catch (error) {
     digestEl.textContent = error.message;
   }
@@ -228,6 +243,22 @@ digestBtn.addEventListener('click', async () => {
   }
 });
 
+pushBtn.addEventListener('click', async () => {
+  pushBtn.disabled = true;
+  pushBtn.textContent = '推送中...';
+
+  try {
+    const result = await requestJson('/api/push/today', { method: 'POST' });
+    pushResultEl.textContent = renderPushResult(result.data);
+    await loadPushConfig();
+  } catch (error) {
+    pushResultEl.textContent = error.message;
+  } finally {
+    pushBtn.disabled = false;
+    pushBtn.textContent = '推送今日晚报';
+  }
+});
+
 refreshBtn.addEventListener('click', refreshAll);
 
 function escapeHtml(value) {
@@ -319,6 +350,18 @@ function renderFetchAllResult(result) {
   }
 
   return lines.join('\n');
+}
+
+function renderPushResult(result) {
+  if (!result) {
+    return '推送无返回结果。';
+  }
+
+  return [
+    `推送方式：${result.provider}`,
+    `是否成功：${result.ok ? '是' : '否'}`,
+    `结果：${result.message || result.error || '无详细信息'}`
+  ].join('\n');
 }
 
 refreshAll();
