@@ -22,6 +22,15 @@
 - 新增个人偏好文件 `backend/data/profile.json`，AI 会按兴趣和避雷项判断重要性。
 - 前端展示当前 AI 模式，并支持对单篇文章重新总结。
 
+## 第四阶段新增功能
+
+- 支持从真实 RSS URL 抓取文章并写入 `articles` 表。
+- WeWe RSS 可作为普通 RSS 数据源添加，本项目不直接爬取微信。
+- RSS 抓取按文章 URL 去重，重复文章不会重复入库。
+- 新文章入库时自动生成 AI 总结，真实 AI 失败时仍 fallback 到 mock。
+- 新增单个数据源测试抓取，可预览前 5 篇文章，不影响数据库。
+- 前端支持“测试抓取”和“抓取全部 RSS”，并展示 imported/skipped/failedSources 统计。
+
 ## 项目结构
 
 ```text
@@ -140,6 +149,7 @@ OLLAMA_MODEL=qwen2.5:3b
 | POST | `/api/articles/:id/resummarize` | 对单篇文章重新总结并更新数据库 |
 | GET | `/api/sources` | 获取所有数据源 |
 | POST | `/api/sources` | 新增数据源 |
+| POST | `/api/sources/:id/test-fetch` | 测试单个 RSS 源并返回前 5 篇预览 |
 | PATCH | `/api/sources/:id` | 更新数据源名称、URL、类型或启用状态 |
 | DELETE | `/api/sources/:id` | 删除数据源 |
 | GET | `/api/config/ai` | 获取当前 AI 模式，不返回 API Key |
@@ -162,7 +172,28 @@ RSS 示例配置在 `backend/data/sources.json`：
 ]
 ```
 
-当前只放示例源，不写死真实公众号源。后续可替换为 WeWe RSS 或其他 RSS/JSON 数据源。
+当前只放示例源，不写死真实公众号源。实际使用时可在前端添加普通 RSS、WeWe RSS 或其他工具生成的 RSS 源。
+
+## RSS / WeWe RSS 接入
+
+添加 RSS 源时，在前端“数据源管理”里填写：
+
+- 名称：自定义名称，例如 `我的技术 RSS`
+- 类型：选择 `RSS`
+- URL：填写可访问的 RSS XML 地址
+- 启用：保持勾选，`/api/fetch` 只抓取启用的数据源
+
+WeWe RSS 接入方式：
+
+本项目不直接爬取微信，也不包含任何微信爬虫逻辑。你可以使用 WeWe RSS 或其他工具在外部生成 RSS/JSON 地址，然后把该地址作为普通 RSS 数据源添加到本项目。
+
+RSS 抓取逻辑：
+
+- 从数据库 `sources` 表读取 `enabled=true` 且 `type=rss` 的数据源
+- 使用 `rss-parser` 拉取和解析 RSS
+- 提取标题、链接、作者、发布时间、正文摘要和来源名
+- 按 URL 去重，已存在文章会跳过
+- 新文章入库时自动生成统一 JSON 摘要
 
 ## 数据源管理 API
 
@@ -186,6 +217,12 @@ curl -X PATCH http://localhost:3090/api/sources/1 \
 
 ```bash
 curl -X DELETE http://localhost:3090/api/sources/1
+```
+
+测试单个 RSS 源：
+
+```bash
+curl -X POST http://localhost:3090/api/sources/1/test-fetch
 ```
 
 ## 测试文章导入
@@ -214,6 +251,14 @@ npm run dev
 2. 点击“生成今日晚报”
 3. 查看今日晚报结果
 
+调试真实 RSS：
+
+1. 添加 RSS 源
+2. 点击“测试抓取”
+3. 点击“抓取全部 RSS”
+4. 点击“生成今日晚报”
+5. 查看文章列表和今日晚报结果
+
 再用 Ollama 验证：
 
 1. 启动 Ollama 并确认模型可用
@@ -225,6 +270,16 @@ npm run dev
 1. 设置 `AI_PROVIDER=deepseek`
 2. 配置 `AI_API_BASE_URL`、`AI_API_KEY`、`AI_MODEL`
 3. 用 `POST /api/articles/:id/resummarize` 单篇测试，确认效果后再用于批量导入或 RSS 抓取
+
+## 常见问题
+
+RSS 无法访问：检查 URL 是否能在浏览器打开，是否需要代理，是否返回标准 RSS/XML 内容。
+
+内容为空：部分 RSS 只提供标题和链接，不提供全文；系统会尽量使用 `content`、`contentSnippet` 或 `summary` 字段。
+
+AI 总结失败：`deepseek` 或 `ollama` 请求失败时会自动 fallback 到 mock，不会阻断文章入库或晚报生成。
+
+重复文章：系统按文章 URL 去重，重复抓取不会重复写入 `articles` 表。
 
 ## AI 总结 Mock 规则
 
@@ -250,8 +305,6 @@ npm run dev
 
 ## 后续计划
 
-- 接入 WeWe RSS
-- 接入 DeepSeek/Ollama 生成真实摘要
 - 增加 PushPlus/邮箱推送
 - 增加个人偏好 `profile.yaml`
 - 增加 JSON 数据源入口

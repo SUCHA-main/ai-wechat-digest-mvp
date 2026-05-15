@@ -6,13 +6,14 @@ const {
   initDb,
   getArticles,
   getArticleById,
+  getSourceById,
   updateArticleSummary,
   getSources,
   createSource,
   updateSource,
   deleteSource
 } = require('./db');
-const { fetchAllSources } = require('./fetcher');
+const { fetchAllSources, testFetchSource } = require('./fetcher');
 const { generateTodayDigest, getTodayDigest } = require('./digest');
 const { importSampleArticles } = require('./sampleImporter');
 const { summarizeArticle, formatSummary, loadProfile } = require('./summarizer');
@@ -88,6 +89,18 @@ app.post('/api/sources', (req, res) => {
   }
 });
 
+app.post('/api/sources/:id/test-fetch', async (req, res) => {
+  const source = getSourceById(Number(req.params.id));
+
+  if (!source) {
+    res.status(404).json({ ok: false, error: '数据源不存在' });
+    return;
+  }
+
+  const result = await testFetchSource(source);
+  res.json({ ok: true, data: result });
+});
+
 app.patch('/api/sources/:id', (req, res) => {
   try {
     const payload = normalizeSourcePayload(req.body, false);
@@ -122,8 +135,8 @@ app.get('/api/digest/today', (req, res) => {
 
 app.post('/api/fetch', async (req, res) => {
   try {
-    const results = await fetchAllSources();
-    res.json({ ok: true, results });
+    const result = await fetchAllSources();
+    res.json({ ok: true, data: result, results: result.sources });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

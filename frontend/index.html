@@ -15,7 +15,7 @@
         <p id="aiMode" class="ai-mode">AI 模式：加载中...</p>
         <div class="actions">
           <button id="importSampleBtn">导入测试文章</button>
-          <button id="fetchBtn">手动抓取 RSS</button>
+          <button id="fetchBtn">抓取全部 RSS</button>
           <button id="digestBtn">生成今日晚报</button>
           <button id="refreshBtn" class="secondary">刷新</button>
         </div>
@@ -40,6 +40,7 @@
           <button type="submit">添加数据源</button>
         </form>
 
+        <pre id="fetchResult" class="result-box">尚未执行 RSS 抓取。</pre>
         <div id="sources" class="sources">加载中...</div>
       </section>
 

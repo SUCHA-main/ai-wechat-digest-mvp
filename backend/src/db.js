@@ -182,6 +182,10 @@ function getArticleById(id) {
   return db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
 }
 
+function getArticleByUrl(url) {
+  return db.prepare('SELECT * FROM articles WHERE url = ?').get(url);
+}
+
 function updateArticleSummary(id, summary, importanceScore) {
   db.prepare(`
     UPDATE articles
@@ -232,6 +236,7 @@ module.exports = {
   db,
   initDb,
   getSources,
+  getSourceById,
   getEnabledSources,
   createSource,
   updateSource,
@@ -239,6 +244,7 @@ module.exports = {
   insertArticle,
   insertArticleIfNew,
   getArticleById,
+  getArticleByUrl,
   updateArticleSummary,
   getArticles,
   getDigestCandidateArticles,

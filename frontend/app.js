@@ -1,6 +1,7 @@
 const digestEl = document.querySelector('#digest');
 const articlesEl = document.querySelector('#articles');
 const sourcesEl = document.querySelector('#sources');
+const fetchResultEl = document.querySelector('#fetchResult');
 const aiModeEl = document.querySelector('#aiMode');
 const sourceForm = document.querySelector('#sourceForm');
 const fetchBtn = document.querySelector('#fetchBtn');
@@ -29,7 +30,7 @@ async function loadArticles() {
   const articles = result.data || [];
 
   if (!articles.length) {
-    articlesEl.innerHTML = '<p class="muted">暂无文章。可以先手动抓取 RSS。</p>';
+    articlesEl.innerHTML = '<p class="muted">暂无文章。可以先导入测试文章或抓取全部 RSS。</p>';
     return;
   }
 
@@ -68,6 +69,7 @@ async function loadSources() {
         <p>${escapeHtml(source.type.toUpperCase())} · ${escapeHtml(source.url)}</p>
       </div>
       <div class="source-actions">
+        <button class="small" type="button" data-source-test="${source.id}">测试抓取</button>
         <label class="check">
           <input type="checkbox" data-source-toggle="${source.id}" ${source.enabled ? 'checked' : ''} /> 启用
         </label>
@@ -128,13 +130,32 @@ sourcesEl.addEventListener('change', async (event) => {
 });
 
 sourcesEl.addEventListener('click', async (event) => {
-  const id = event.target.dataset.sourceDelete;
-  if (!id) {
+  const testId = event.target.dataset.sourceTest;
+  const deleteId = event.target.dataset.sourceDelete;
+
+  if (testId) {
+    event.target.disabled = true;
+    event.target.textContent = '测试中...';
+
+    try {
+      const result = await requestJson(`/api/sources/${testId}/test-fetch`, { method: 'POST' });
+      fetchResultEl.textContent = renderTestFetchResult(result.data);
+    } catch (error) {
+      fetchResultEl.textContent = error.message;
+    } finally {
+      event.target.disabled = false;
+      event.target.textContent = '测试抓取';
+    }
+
+    return;
+  }
+
+  if (!deleteId) {
     return;
   }
 
   try {
-    await requestJson(`/api/sources/${id}`, { method: 'DELETE' });
+    await requestJson(`/api/sources/${deleteId}`, { method: 'DELETE' });
     await loadSources();
   } catch (error) {
     alert(error.message);
@@ -181,13 +202,14 @@ fetchBtn.addEventListener('click', async () => {
   fetchBtn.textContent = '抓取中...';
 
   try {
-    await requestJson('/api/fetch', { method: 'POST' });
+    const result = await requestJson('/api/fetch', { method: 'POST' });
+    fetchResultEl.textContent = renderFetchAllResult(result.data);
     await refreshAll();
   } catch (error) {
     alert(error.message);
   } finally {
     fetchBtn.disabled = false;
-    fetchBtn.textContent = '手动抓取 RSS';
+    fetchBtn.textContent = '抓取全部 RSS';
   }
 });
 
@@ -249,6 +271,54 @@ function parseSummary(value) {
   } catch (error) {
     return value;
   }
+}
+
+function renderTestFetchResult(result) {
+  if (!result) {
+    return '测试抓取无返回结果。';
+  }
+
+  const lines = [
+    `测试源：${result.source?.name || '未知'}`,
+    `是否成功：${result.accessible ? '是' : '否'}`,
+    `解析文章数：${result.articleCount || 0}`
+  ];
+
+  if (result.error) {
+    lines.push(`错误：${result.error}`);
+  }
+
+  if (result.preview?.length) {
+    lines.push('', '前 5 篇：');
+    result.preview.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item.title || '未命名文章'}`);
+      lines.push(`   ${item.url || '无链接'}`);
+    });
+  }
+
+  return lines.join('\n');
+}
+
+function renderFetchAllResult(result) {
+  if (!result) {
+    return 'RSS 抓取无返回结果。';
+  }
+
+  const lines = [
+    `成功抓取源数：${result.fetchedSources}`,
+    `新增文章：${result.imported}`,
+    `跳过文章：${result.skipped}`,
+    `失败源数：${result.failedSources?.length || 0}`
+  ];
+
+  if (result.failedSources?.length) {
+    lines.push('', '失败源：');
+    result.failedSources.forEach((source) => {
+      lines.push(`- ${source.name}: ${source.error}`);
+    });
+  }
+
+  return lines.join('\n');
 }
 
 refreshAll();
