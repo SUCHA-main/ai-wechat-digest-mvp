@@ -1,0 +1,13 @@
+services:
+  ai-wechat-digest:
+    build: .
+    container_name: ai-wechat-digest-mvp
+    ports:
+      - "3090:3090"
+    environment:
+      PORT: "3090"
+      ENABLE_SCHEDULER: "false"
+      ENABLE_DAILY_PUSH: "false"
+      AI_PROVIDER: "mock"
+      PUSH_PROVIDER: "console"
+    restart: unless-stopped
