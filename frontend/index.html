@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>公众号文章 AI 晚报 MVP</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">AI WeChat Digest MVP</p>
+        <h1>公众号文章 AI 晚报</h1>
+        <p>当前版本只预留 RSS/JSON 数据源入口，AI 总结为本地 mock。</p>
+        <p id="aiMode" class="ai-mode">AI 模式：加载中...</p>
+        <div class="actions">
+          <button id="importSampleBtn">导入测试文章</button>
+          <button id="fetchBtn">手动抓取 RSS</button>
+          <button id="digestBtn">生成今日晚报</button>
+          <button id="refreshBtn" class="secondary">刷新</button>
+        </div>
+      </header>
+
+      <section class="card sources-card">
+        <div class="section-title">
+          <div>
+            <h2>数据源管理</h2>
+            <p class="muted">`sources.json` 仅作为初始种子，启动后以数据库为准。</p>
+          </div>
+        </div>
+
+        <form id="sourceForm" class="source-form">
+          <input id="sourceName" name="name" placeholder="名称，例如：我的 RSS" required />
+          <select id="sourceType" name="type">
+            <option value="rss">RSS</option>
+            <option value="json">JSON</option>
+          </select>
+          <input id="sourceUrl" name="url" type="url" placeholder="https://example.com/rss.xml" required />
+          <label class="check"><input id="sourceEnabled" name="enabled" type="checkbox" checked /> 启用</label>
+          <button type="submit">添加数据源</button>
+        </form>
+
+        <div id="sources" class="sources">加载中...</div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>今日晚报</h2>
+          <pre id="digest">加载中...</pre>
+        </article>
+
+        <article class="card">
+          <h2>文章列表</h2>
+          <div id="articles" class="articles">加载中...</div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

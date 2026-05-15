@@ -1,0 +1,14 @@
+[
+  {
+    "name": "示例公众号",
+    "type": "rss",
+    "url": "https://example.com/rss.xml",
+    "enabled": true
+  },
+  {
+    "name": "示例技术源",
+    "type": "rss",
+    "url": "https://example.org/feed.xml",
+    "enabled": false
+  }
+]

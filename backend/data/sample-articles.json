@@ -1,0 +1,42 @@
+[
+  {
+    "source_name": "测试公众号",
+    "title": "AI 编程工具如何帮助小团队提升交付效率",
+    "url": "https://example.com/sample/ai-coding-tools",
+    "author": "MVP 测试作者",
+    "published_at": null,
+    "content": "这是一篇模拟公众号文章，讨论 AI 编程助手在需求拆分、代码生成、测试补全和代码审查中的使用方式。文章强调工具不能替代工程判断，但可以减少重复劳动，让小团队把更多时间投入到产品验证和架构取舍。"
+  },
+  {
+    "source_name": "测试公众号",
+    "title": "一个周末物联网项目：用传感器记录家庭环境",
+    "url": "https://example.com/sample/iot-home-sensor",
+    "author": "MVP 测试作者",
+    "published_at": null,
+    "content": "这是一篇原创模拟内容，介绍如何规划一个简单物联网项目：采集温湿度数据、保存到本地数据库，并用网页展示趋势。重点是先完成闭环，再逐步加入告警和远程访问。"
+  },
+  {
+    "source_name": "学习测试源",
+    "title": "专升本学习计划：如何把每天两小时用到关键处",
+    "url": "https://example.com/sample/college-upgrade-study",
+    "author": "MVP 测试作者",
+    "published_at": null,
+    "content": "这是一篇模拟学习类文章，围绕专升本备考节奏展开，建议把时间拆成基础复习、错题整理、真题训练和复盘四个部分。文章提醒读者不要只追求学习时长，更要关注每周可验证的进步。"
+  },
+  {
+    "source_name": "开源观察",
+    "title": "开源项目维护者最常遇到的三个问题",
+    "url": "https://example.com/sample/open-source-maintainer",
+    "author": "MVP 测试作者",
+    "published_at": null,
+    "content": "这是一篇模拟开源主题文章，讨论 issue 分流、文档滞后和贡献者沟通成本。文章建议维护者用清晰的贡献指南、自动化检查和小范围路线图降低协作摩擦。"
+  },
+  {
+    "source_name": "生活资讯测试源",
+    "title": "本周生活小提醒：整理订阅、备份照片和检查账单",
+    "url": "https://example.com/sample/life-weekly-tips",
+    "author": "MVP 测试作者",
+    "published_at": null,
+    "content": "这是一篇模拟生活资讯文章，提醒读者定期整理不再使用的订阅服务、备份重要照片，并检查自动扣费账单。内容偏日常管理，不涉及技术热点。"
+  }
+]
