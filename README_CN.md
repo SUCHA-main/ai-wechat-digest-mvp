@@ -57,14 +57,23 @@ flowchart TD
   K --> H
 ```
 
-## 截图占位
+## 项目截图
 
-> 当前仓库只预留截图位置，不提交真实截图。
+- 首页 / 整体界面
 
-- 首页截图：`docs/images/home-placeholder.png`
-- 数据源管理截图：`docs/images/sources-placeholder.png`
-- 晚报生成截图：`docs/images/digest-placeholder.png`
-- 推送结果截图：`docs/images/push-placeholder.png`
+![首页截图](./docs/images/home.png)
+
+- 数据源管理
+
+![数据源管理截图](./docs/images/sources.png)
+
+- 晚报生成结果
+
+![晚报生成截图](./docs/images/digest.png)
+
+- 推送结果 console 模式
+
+![推送结果截图](./docs/images/push.png)
 
 ## 项目结构
 

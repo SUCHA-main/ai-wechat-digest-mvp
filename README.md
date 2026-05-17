@@ -34,12 +34,21 @@ This project is designed as a portfolio-friendly full-stack MVP. It does not req
 
 ## Screenshots
 
-Screenshots are intentionally left as placeholders:
+Home page:
 
-- Home page: `docs/images/home-placeholder.png`
-- Source management: `docs/images/sources-placeholder.png`
-- Digest generation: `docs/images/digest-placeholder.png`
-- Push result: `docs/images/push-placeholder.png`
+![Home page](./docs/images/home.png)
+
+Source management:
+
+![Source management](./docs/images/sources.png)
+
+Digest generation:
+
+![Digest generation](./docs/images/digest.png)
+
+Console push result:
+
+![Push result](./docs/images/push.png)
 
 ## Quick Start
 
