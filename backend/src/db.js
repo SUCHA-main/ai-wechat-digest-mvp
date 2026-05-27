@@ -232,6 +232,15 @@ function getDigestByDate(digestDate) {
   return db.prepare('SELECT * FROM digests WHERE digest_date = ?').get(digestDate);
 }
 
+function refreshSampleArticleDate(url) {
+  const now = new Date().toISOString();
+  return db.prepare(`
+    UPDATE articles
+    SET created_at = ?, published_at = COALESCE(published_at, ?)
+    WHERE url = ? AND url LIKE 'https://example.com/sample/%'
+  `).run(now, now, url);
+}
+
 module.exports = {
   db,
   initDb,
@@ -249,5 +258,6 @@ module.exports = {
   getArticles,
   getDigestCandidateArticles,
   upsertDigest,
-  getDigestByDate
+  getDigestByDate,
+  refreshSampleArticleDate
 };

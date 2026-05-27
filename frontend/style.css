@@ -11,6 +11,7 @@
 
 body {
   margin: 0;
+  position: relative;
 }
 
 .page {
@@ -253,6 +254,148 @@ pre {
   padding-left: 20px;
 }
 
+.empty-state {
+  padding: 32px 24px;
+  text-align: center;
+  color: #697586;
+}
+
+.empty-state p {
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.empty-state strong {
+  color: #1b4d89;
+}
+
+.digest-content {
+  line-height: 1.6;
+}
+
+.digest-content h1 {
+  font-size: 1.8em;
+  margin-bottom: 16px;
+  color: #132238;
+  border-bottom: 2px solid #e4ded3;
+  padding-bottom: 8px;
+}
+
+.digest-content h2 {
+  font-size: 1.4em;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  color: #263d59;
+  border-left: 4px solid #f6c85f;
+  padding-left: 12px;
+}
+
+.digest-content h3 {
+  font-size: 1.1em;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: #1b4d89;
+}
+
+.digest-content p {
+  margin-bottom: 12px;
+}
+
+.digest-content ul,
+.digest-content ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.digest-content li {
+  margin-bottom: 8px;
+}
+
+.digest-content code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.digest-content a {
+  color: #1b4d89;
+  text-decoration: underline;
+}
+
+.digest-content strong {
+  color: #132238;
+}
+
+.notice-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+.notice {
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: notice-slide-in 0.3s ease-out;
+  cursor: pointer;
+  position: relative;
+}
+
+.notice::after {
+  content: '×';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.notice-success {
+  background: #10b981;
+}
+
+.notice-error {
+  background: #ef4444;
+}
+
+.notice-info {
+  background: #3b82f6;
+}
+
+.notice-fade-out {
+  animation: notice-fade-out 0.3s ease-out forwards;
+}
+
+@keyframes notice-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes notice-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
 @media (max-width: 800px) {
   .page {
     width: min(100% - 20px, 1120px);
@@ -279,5 +422,11 @@ pre {
   .source-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .notice-container {
+    left: 20px;
+    right: 20px;
+    max-width: none;
   }
 }

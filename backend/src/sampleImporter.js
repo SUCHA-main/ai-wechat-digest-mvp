@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { insertArticleIfNew } = require('./db');
+const { insertArticleIfNew, refreshSampleArticleDate } = require('./db');
 const { summarizeArticle, formatSummary } = require('./summarizer');
 
 const samplePath = path.join(__dirname, '..', 'data', 'sample-articles.json');
@@ -9,6 +9,7 @@ async function importSampleArticles() {
   const samples = JSON.parse(fs.readFileSync(samplePath, 'utf8'));
   let imported = 0;
   let skipped = 0;
+  let refreshed = 0;
 
   for (const sample of samples) {
     const summary = await summarizeArticle({
@@ -31,14 +32,20 @@ async function importSampleArticles() {
     if (result.changes > 0) {
       imported += 1;
     } else {
-      skipped += 1;
+      const refreshResult = refreshSampleArticleDate(sample.url);
+      if (refreshResult.changes > 0) {
+        refreshed += 1;
+      } else {
+        skipped += 1;
+      }
     }
   }
 
   return {
     total: samples.length,
     imported,
-    skipped
+    skipped,
+    refreshed
   };
 }
 
