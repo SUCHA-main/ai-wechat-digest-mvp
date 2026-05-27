@@ -1,51 +1,236 @@
 # Project Summary
 
-## Project Background
+## 项目背景
 
-Many readers follow technical articles, public-account content, RSS feeds, and community updates every day. The information volume is high, but most content does not deserve deep reading. This project explores a lightweight personal digest workflow: collect articles, summarize them with AI, rank them by personal preference, and generate a daily report.
+很多技术读者每天关注 RSS 源、公众号、社区更新，信息量大但值得精读的内容不多。这个项目探索一个轻量的个人晚报工作流：收集文章、AI 摘要、偏好筛选、生成每日报告。
 
-## Problem Solved
+## 需求分析
 
-The project helps users reduce repetitive information screening. It turns scattered RSS-compatible content into a structured daily digest with clear priorities: must-read, quick-scan, and skippable.
+**核心问题**：
+- 技术信息过载，需要筛选机制
+- 不是所有文章都值得精读
+- 需要一份每天可快速浏览的摘要
+- 个人偏好应该影响内容推荐
 
-## System Architecture
+**目标用户**：
+- 技术内容消费者
+- 需要信息筛选的个人用户
+- 想要展示全栈 MVP 能力的开发者
 
-The system is split into small modules:
+## 设计目标
 
-- `fetcher.js`: reads enabled RSS sources, fetches feeds, parses items, deduplicates by URL, and inserts new articles.
-- `summarizer.js`: normalizes all summary outputs into JSON and falls back to mock when AI fails.
-- `aiProvider.js`: adapts mock, DeepSeek/OpenAI-compatible APIs, and Ollama.
-- `digest.js`: builds the daily Markdown digest from recent articles.
-- `pusher.js`: pushes the digest through console, PushPlus, or SMTP email.
-- `scheduler.js`: optionally runs the daily pipeline at 22:30.
-- `server.js`: exposes REST APIs and hosts the static frontend.
+1. **MVP 优先**：功能完整但不复杂，适合作品集展示
+2. **零配置运行**：默认 Mock 模式，不需要 API Key
+3. **安全可靠**：AI 调用失败时自动回退
+4. **演示友好**：内置测试数据，保证演示效果
+5. **可扩展**：模块化设计，便于后续增强
 
-## Completed Stages
+## 技术选型
 
-- Stage 1: MVP scaffold with Express, SQLite, mock summary, and static frontend.
-- Stage 2: source management and sample article import.
-- Stage 3: AI provider abstraction and personal profile summarization.
-- Stage 4: real RSS fetching and source test preview.
-- Stage 5: daily digest push framework.
-- Presentation stage: bilingual README, demo docs, screenshots placeholders, and Docker support.
+| 组件 | 选择 | 理由 |
+|------|------|------|
+| 后端框架 | Express | 简单、成熟、学习成本低 |
+| 数据库 | SQLite (node:sqlite) | 零依赖、适合 MVP |
+| RSS 解析 | rss-parser | 成熟、稳定 |
+| AI 适配 | 自研 | 支持多 provider，便于回退 |
+| 前端 | 原生 HTML/CSS/JS | 零构建、易理解 |
+| 部署 | Docker | 标准化、易分享 |
 
-## Technical Challenges
+## 系统架构
 
-- Keeping the project runnable without API keys by making mock the default provider.
-- Normalizing unreliable AI output into strict JSON with fallback behavior.
-- Preventing one failed RSS source from breaking the entire fetch request.
-- Avoiding accidental pushes by making console the default push mode and disabling scheduled push by default.
-- Using Node's built-in SQLite to avoid native dependency compilation issues on Windows.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │  Sources  │  │ Articles │  │  Digest  │  │  Push    │    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        Backend                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │ Fetcher  │  │Summarizer│  │  Digest  │  │  Pusher  │    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
+│  │AIProvider│  │  Profile │  │Scheduler │                  │
+│  └──────────┘  └──────────┘  └──────────┘                  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        Database                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
+│  │ Sources  │  │ Articles │  │ Digests  │                  │
+│  └──────────┘  └──────────┘  └──────────┘                  │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## Extensibility
+## 核心模块说明
 
-- Add WeWe RSS deployment examples.
-- Add JSON source import.
-- Improve personal preference scoring with tags and embeddings.
-- Add digest history and search.
-- Add Docker volume persistence guidance.
-- Add a richer dashboard with charts, filters, and source health status.
+### 数据源管理
 
-## Portfolio Pitch
+- 支持 RSS 和 JSON 两种类型
+- 数据源信息存储在 SQLite 的 `sources` 表
+- 启动时从 `sources.json` 种子数据初始化
+- 支持 CRUD 操作和启停控制
 
-AI WeChat / RSS Digest Assistant is a pragmatic full-stack MVP that demonstrates data ingestion, persistence, AI provider abstraction, prompt engineering, scheduled jobs, push integrations, and a lightweight frontend. It is intentionally scoped to avoid scraping WeChat directly and instead consumes legal RSS-compatible feeds, making it suitable for personal productivity and portfolio demonstration.
+### RSS 抓取
+
+- 使用 `rss-parser` 解析 RSS feed
+- 按 URL 去重，避免重复入库
+- 失败的源会记录错误，不影响其他源
+- 支持单个源测试抓取
+
+### 文章去重
+
+- 使用 `INSERT ... ON CONFLICT(url) DO NOTHING` 策略
+- 保证同一 URL 的文章只入库一次
+- 测试文章支持刷新日期机制
+
+### AI 总结
+
+- 支持三种 provider：mock、deepseek、ollama
+- AI 输出标准化为 JSON 格式
+- 失败时自动回退到 mock 模式
+- 输出包含：summary、points、importance_score、reason
+
+### 个人偏好评分
+
+- `profile.json` 定义用户兴趣和避免内容
+- 偏好信息参与 AI prompt 构建
+- Mock 模式下也使用偏好进行关键词匹配
+
+### 晚报生成
+
+- 按重要性评分分组：4-5 分（最值得看）、2-3 分（快速扫一眼）、1 分（可跳过）
+- 生成 Markdown 格式晚报
+- 支持每日重新生成
+
+### 前端展示
+
+- 原生 HTML/CSS/JS，零构建依赖
+- Markdown 格式化渲染（标题、列表、加粗、链接）
+- 页面内 notice 提示替代 alert
+- 空状态友好提示
+
+### 推送出口
+
+- 支持三种方式：console、pushplus、email
+- 配置缺失时返回明确错误
+- 不泄露敏感配置信息
+
+## 关键实现细节
+
+### Mock Fallback
+
+当 AI 调用失败、超时、返回非 JSON 或字段不符合要求时，自动回退到 mock 模式。这保证了：
+- 演示不会因为 API 问题中断
+- 开发环境可以无 API Key 运行
+- 生产环境有容错能力
+
+### profile.json 参与 Prompt
+
+用户的兴趣、避免内容、评分规则都会注入到 AI prompt 中，让 AI 输出更符合个人偏好。Mock 模式下也使用这些偏好进行关键词匹配。
+
+### Sample 演示数据刷新
+
+测试文章支持刷新日期机制：
+- 首次导入时正常插入
+- 再次导入时刷新 `created_at` 和 `published_at`
+- 保证测试文章总是能进入今日晚报
+- 不影响真实 RSS 文章的去重逻辑
+
+### 安全 Markdown 渲染
+
+前端渲染 Markdown 时：
+1. 先调用 `escapeHtml()` 转义所有 HTML 特殊字符
+2. 再做有限的 Markdown→HTML 转换
+3. 链接使用 `sanitizeUrl()` 过滤，只允许 http/https/mailto
+4. 防止 XSS 攻击和恶意链接
+
+### URL Sanitize
+
+`sanitizeUrl()` 函数检查链接协议：
+- `http://` → 允许
+- `https://` → 允许
+- `mailto:` → 允许
+- 其他（如 `javascript:`、`data:`）→ 替换为 `#`
+
+## 遇到的问题与解决
+
+### 1. AI 输出不稳定
+
+**问题**：AI 可能返回非 JSON 格式、缺少字段、或完全失败。
+
+**解决**：
+- JSON 标准化：`normalizeSummary()` 处理各种异常格式
+- 自动回退：失败时切换到 mock 模式
+- 字段补全：缺失字段用默认值填充
+
+### 2. RSS 源不稳定
+
+**问题**：某些 RSS 源可能超时、返回错误、或格式不标准。
+
+**解决**：
+- 失败源记录：记录失败原因，不影响其他源
+- 单源测试：支持预览单个数据源
+- 超时控制：fetch 请求有超时机制
+
+### 3. 演示文章过期
+
+**问题**：测试文章导入后，第二天就不再进入今日晚报。
+
+**解决**：
+- Sample refresh 机制：再次导入时刷新日期
+- 只对测试文章生效：URL 匹配 `example.com/sample/`
+- 不影响真实文章：RSS 抓取的去重逻辑不变
+
+### 4. Markdown 原文展示不好看
+
+**问题**：直接用 `<pre>` 显示 Markdown 原文，视觉效果差。
+
+**解决**：
+- 前端格式化渲染：实现 `renderMarkdown()` 函数
+- 安全处理：先转义 HTML，再做有限转换
+- 支持基础语法：标题、列表、加粗、链接
+
+### 5. Alert 体验差
+
+**问题**：`alert()` 弹窗打断用户操作，体验不好。
+
+**解决**：
+- 页面内 notice：实现 `showNotice()` 函数
+- 自动消失：success 3s、info 4s、error 6s
+- 可点击关闭：用户可以手动关闭
+- 不同颜色：成功绿色、错误红色、信息蓝色
+
+## 当前局限
+
+1. 不是生产级 CMS 或内容平台
+2. 无用户认证或多用户支持
+3. 轻量 Markdown 渲染器只支持基础语法
+4. 未实现微信公众号自动发布
+5. SQLite 适合本地 MVP，不适合大规模部署
+6. 暂无单元测试
+
+## 后续计划
+
+1. WeWe RSS 实际接入示例
+2. 文章搜索与筛选改进
+3. 定时任务时间配置
+4. GitHub Actions CI
+5. 更好的截图和演示视频
+6. 单元测试
+7. JSON 数据源支持
+8. 晚报历史与归档
+
+## 简历描述版本
+
+### 简短版（1-2 行）
+
+AI 微信公众号晚报 MVP，支持 RSS 抓取、AI/Mock 总结、个人偏好筛选、Markdown 晚报生成和推送出口。使用 Node.js + Express + SQLite，前端原生 HTML/CSS/JS。
+
+### 详细版（4-6 行）
+
+独立完成的端到端 MVP 项目，实现从 RSS 数据源到格式化晚报的完整链路。技术栈：Node.js + Express + SQLite + 原生前端。核心亮点：1）AI Provider 抽象与自动回退机制；2）RSS 抓取与 URL 去重；3）安全 Markdown 渲染（HTML 转义 + URL 过滤）；4）演示数据刷新机制保证演示效果；5）页面内 notice 提示替代 alert。适合作品集展示和 MVP 验证。

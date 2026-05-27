@@ -1,8 +1,8 @@
 # Demo Script
 
-This script is intended for local demos, portfolio walkthroughs, or recording a short project video.
+3-5 分钟演示脚本，适合项目展示、录屏、面试讲解。
 
-## 1. Start The Project
+## 演示前准备
 
 ```bash
 cd backend
@@ -10,57 +10,152 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3090`.
+打开 `http://localhost:3090`。
 
-## 2. Import Sample Articles
+默认 Mock 模式，不需要真实 API Key。
 
-Click `导入测试文章`.
+## 演示路线
 
-Expected result: the article list shows five simulated articles covering AI coding tools, IoT, study planning, open source, and lifestyle information.
+### 0:00-0:30 项目介绍
 
-## 3. Add An RSS Source
+话术：
 
-In the source form:
+> 这是一个 AI 微信公众号晚报 MVP 项目。它可以从 RSS 源抓取文章，用 AI 生成摘要，按个人偏好筛选，最后生成一份结构化的每日晚报。
+>
+> 默认使用 Mock 模式，不需要 API Key 就能完整演示。
 
-- Name: `Demo RSS`
-- Type: `RSS`
-- URL: any reachable RSS feed URL
-- Enabled: checked
+### 0:30-1:20 数据源和文章抓取
 
-Click `添加数据源`.
+话术：
 
-## 4. Test Fetch
+> 首先看数据源管理。这里可以添加、启停、删除 RSS 数据源。
+>
+> 我已经预置了两个示例数据源。点击"测试抓取"可以预览数据源是否可用。
+>
+> 点击"抓取全部 RSS"会从所有启用的数据源拉取文章，按 URL 去重后存入数据库。
 
-Click `测试抓取` next to the RSS source.
+操作：
+1. 展示数据源列表
+2. 点击某个数据源的"测试抓取"
+3. 查看测试结果
+4. 点击"抓取全部 RSS"
 
-Expected result: the result box shows whether the feed is accessible, the parsed article count, and the first five titles.
+### 1:20-2:10 导入测试文章
 
-## 5. Fetch All RSS
+话术：
 
-Click `抓取全部 RSS`.
+> 为了保证演示效果，项目内置了 5 篇测试文章。点击"导入测试文章"会把这些文章导入数据库。
+>
+> 这些文章覆盖了 AI 编程、物联网、学习计划、开源维护等主题，方便展示不同重要性评分。
 
-Expected result: the result box shows imported, skipped, and failed source counts. The article list refreshes automatically.
+操作：
+1. 点击"导入测试文章"
+2. 查看 notice 提示"测试文章导入成功"
+3. 查看文章列表
 
-## 6. Generate Today's Digest
+### 2:10-3:00 生成 AI 晚报
 
-Click `生成今日晚报`.
+话术：
 
-Expected result: the digest panel shows a Markdown report grouped by importance.
+> 现在点击"生成今日晚报"。系统会把最近 24 小时内的文章按重要性评分分为三组：
+>
+> 今日最值得看、可以快速扫一眼、可以跳过。
+>
+> 评分依据是文章内容与个人偏好的匹配度，个人偏好定义在 profile.json 中。
 
-## 7. Re-Summarize One Article
+操作：
+1. 点击"生成今日晚报"
+2. 查看 notice 提示"今日晚报已生成"
+3. 查看晚报内容
 
-Click `重新总结` on any article.
+### 3:00-3:40 查看格式化晚报
 
-Expected result: the article summary and importance score are refreshed, then today's digest is regenerated.
+话术：
 
-## 8. Push Today's Digest In Console Mode
+> 晚报现在是格式化展示的，有清晰的标题层级、列表缩进、加粗重点。
+>
+> 之前是直接显示 Markdown 原文，现在前端会渲染成结构化的 HTML。
+>
+> 每篇文章都有一句话总结、三个要点、推荐阅读理由和原文链接。
 
-Keep default configuration:
+操作：
+1. 滚动查看晚报内容
+2. 展示标题层级、列表、加粗效果
+3. 点击文章链接（如果有的话）
 
-```env
-PUSH_PROVIDER=console
-```
+### 3:40-4:20 说明 AI Provider 和推送出口
 
-Click `推送今日晚报`.
+话术：
 
-Expected result: the browser shows a successful push message, and the server console prints the Markdown digest.
+> 项目支持三种 AI 模式：
+>
+> Mock 是默认模式，基于关键词评分，不需要 API Key。
+>
+> DeepSeek 模式使用 OpenAI 兼容接口，可以对接 DeepSeek、OpenAI 等服务。
+>
+> Ollama 模式可以连接本地部署的大语言模型。
+>
+> 推送方面，支持控制台输出、PushPlus 和 SMTP 邮箱三种方式。
+
+操作：
+1. 查看页面顶部的"AI 模式"显示
+2. 查看"推送模式"显示
+3. 点击"推送今日晚报"查看控制台输出
+
+### 4:20-5:00 总结项目价值和后续计划
+
+话术：
+
+> 这个项目展示了端到端的 MVP 设计能力：
+>
+> RSS 抓取、数据持久化、AI 适配、前端渲染、推送出口，全链路打通。
+>
+> 后续可以接入真实的微信公众号发布、添加文章搜索、改进评分算法等。
+
+## 异常备用方案
+
+### RSS 源失败
+
+如果测试抓取失败：
+- 说明 RSS 源可能不可用
+- 直接使用"导入测试文章"功能
+- 测试文章不依赖外部网络
+
+### API Key 没配置
+
+如果提示 API Key 错误：
+- 说明默认使用 Mock 模式
+- Mock 模式不需要 API Key
+- 如果要使用真实 AI，需要配置环境变量
+
+### Ollama 没启动
+
+如果 Ollama 连接失败：
+- 说明系统会自动回退到 Mock 模式
+- 回退机制保证演示不会中断
+- 可以在控制台看到回退日志
+
+### 没有今日文章
+
+如果晚报显示"今天还没有文章"：
+- 点击"导入测试文章"
+- 测试文章会自动刷新日期
+- 重新生成晚报即可
+
+### 端口占用
+
+如果端口 3090 被占用：
+- 修改 `backend/.env` 中的 `PORT` 变量
+- 或者停止占用端口的进程
+
+## 截图建议
+
+下一轮应该截取以下图片：
+
+1. **首页/控制台**：展示整体界面和主要按钮
+2. **数据源列表**：展示数据源管理功能
+3. **文章列表**：展示文章和重要性评分
+4. **格式化晚报**：展示 Markdown 渲染效果
+5. **AI 配置状态**：展示页面顶部的模式显示
+6. **notice 提示**：展示成功/错误提示效果
+7. **Docker 启动**（可选）：展示容器化部署

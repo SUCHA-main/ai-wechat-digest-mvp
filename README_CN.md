@@ -1,117 +1,60 @@
-# AI 微信公众号 / RSS 信息晚报助手
+# AI 微信公众号晚报 MVP
+
+一个面向 AI 技术资讯筛选的个人晚报工具 MVP，支持 RSS 数据源管理、文章抓取、AI/Mock 总结、个人偏好筛选、Markdown 晚报生成和推送出口。
 
 [English README](./README.md)
 
-这是一个面向个人信息流管理的 AI 晚报助手。项目可以从 RSS、WeWe RSS 或其他合法信息源抓取文章，使用 mock / DeepSeek / Ollama 生成结构化摘要，并把当天内容整理成 Markdown 晚报，支持控制台、PushPlus、SMTP 邮箱推送框架。
+## 项目解决的问题
 
-当前定位是作品集级 MVP：功能链路完整、默认配置安全、便于本地演示和后续扩展。
+技术读者每天关注很多 RSS 源、公众号、社区更新，信息量大但值得精读的内容不多。这个项目探索一个轻量的个人晚报工作流：
 
-## 核心功能
+- 从 RSS 兼容信息源收集文章
+- 用 AI（或 Mock）生成摘要
+- 按个人偏好评分
+- 生成结构化每日晚报
+- 通过推送出口投递
 
-- 数据源管理：支持新增、启停、删除 RSS/JSON 数据源。
-- RSS 抓取：从启用的 RSS 源抓取文章，按 URL 去重入库。
-- 测试抓取：单个数据源可预览前 5 篇文章，不写入数据库。
-- 测试文章导入：内置 5 篇模拟文章，便于无外网时演示。
-- AI 总结：支持 mock、DeepSeek/OpenAI 兼容接口、本地 Ollama。
-- 个人偏好：`profile.json` 用于影响 AI prompt 和 mock 评分。
-- 晚报生成：按重要性分为“今日最值得看 / 可以快速扫一眼 / 可以跳过”。
-- 手动重总结：单篇文章可重新生成摘要和评分。
-- 推送框架：支持 console、PushPlus、SMTP 邮箱，默认只打印到控制台。
-- 定时任务：可在每天 22:30 自动抓取 RSS、生成晚报，并可选推送。
+## 功能特性
+
+- **数据源管理**：新增、启停、删除 RSS/JSON 数据源
+- **RSS 抓取与去重**：抓取启用的数据源，按 URL 去重入库
+- **测试文章导入**：内置 5 篇模拟文章，支持刷新日期保证演示可用
+- **AI 总结**：支持 Mock（默认）、DeepSeek/OpenAI 兼容接口、本地 Ollama
+- **个人偏好评分**：`profile.json` 参与 AI prompt 和 Mock 评分
+- **Markdown 晚报生成**：按重要性分为"今日最值得看 / 可以快速扫一眼 / 可以跳过"
+- **格式化晚报展示**：前端渲染 Markdown，支持标题、列表、加粗、链接
+- **页面内提示**：成功/错误/信息提示替代 alert 弹窗
+- **推送出口**：控制台 / PushPlus / SMTP 邮箱
+- **Docker 支持**：容器化部署
 
 ## 技术栈
 
-- 后端：Node.js、Express
-- 定时任务：node-cron
-- 数据库：Node 内置 `node:sqlite`
-- RSS 解析：rss-parser
-- AI 适配：mock、OpenAI compatible chat completions、Ollama `/api/chat`
-- 推送：console、PushPlus、nodemailer SMTP
-- 前端：原生 HTML / CSS / JavaScript
-- 配置：dotenv
-- 部署：Docker / Docker Compose
+- **后端**：Node.js、Express
+- **数据库**：Node 内置 `node:sqlite`
+- **RSS 解析**：rss-parser
+- **AI 适配**：Mock、OpenAI 兼容接口、Ollama `/api/chat`
+- **推送**：控制台、PushPlus、nodemailer SMTP
+- **前端**：原生 HTML / CSS / JavaScript
+- **部署**：Docker / Docker Compose
 
-## 项目亮点
-
-- 不依赖真实 AI Key 也能完整演示，默认 mock 保证开箱即用。
-- AI Provider 和 Push Provider 都有 fallback / 配置检查，不让演示流程中断。
-- RSS、AI、摘要、推送分层清晰，便于替换 WeWe RSS、DeepSeek、Ollama、PushPlus。
-- 用 SQLite 降低部署成本，适合个人服务器、NAS、开发机和作品集展示。
-- 前端保持轻量，无 React/Vue 构建链，适合快速理解端到端链路。
-
-## 架构流程图
+## 系统流程
 
 ```mermaid
 flowchart TD
-  A[RSS / WeWe RSS / 合法信息源] --> B[数据源管理 sources]
-  B --> C[RSS 抓取 fetcher]
-  C --> D[文章去重与入库 articles]
-  D --> E[AI 总结 summarizer]
-  E --> F[今日晚报 digest]
+  A[RSS / WeWe RSS 信息源] --> B[抓取器]
+  B --> C[SQLite 文章表]
+  C --> D[AI / Mock 总结]
+  D --> E[个人偏好评分]
+  E --> F[每日晚报生成]
   F --> G[前端展示]
-  F --> H[推送 pusher]
-  H --> I[Console / PushPlus / SMTP Email]
-  J[profile.json 个人偏好] --> E
-  K[node-cron 22:30] --> C
-  K --> F
-  K --> H
-```
-
-## 项目截图
-
-- 首页 / 整体界面
-
-![首页截图](./docs/images/home.png)
-
-- 数据源管理
-
-![数据源管理截图](./docs/images/sources.png)
-
-- 晚报生成结果
-
-![晚报生成截图](./docs/images/digest.png)
-
-- 推送结果 console 模式
-
-![推送结果截图](./docs/images/push.png)
-
-## 项目结构
-
-```text
-backend/
-  src/
-    aiProvider.js
-    db.js
-    digest.js
-    fetcher.js
-    pusher.js
-    sampleImporter.js
-    scheduler.js
-    server.js
-    summarizer.js
-  data/
-    profile.json
-    sample-articles.json
-    sources.json
-  package.json
-  .env.example
-frontend/
-  index.html
-  app.js
-  style.css
-docs/
-  demo-script.md
-  project-summary.md
-  images/.gitkeep
-Dockerfile
-docker-compose.yml
-README.md
-README_CN.md
+  F --> H[推送出口]
+  H --> I[控制台 / PushPlus / SMTP]
+  J[profile.json] --> D
 ```
 
 ## 快速启动
 
-建议使用 Node.js `22.5+`。项目使用 Node 内置 SQLite 能力，避免安装原生 SQLite 编译依赖。
+建议使用 Node.js `22.5+`，项目使用 Node 内置 SQLite 能力。
 
 ```bash
 cd backend
@@ -121,7 +64,83 @@ npm run dev
 
 访问：`http://localhost:3090`
 
-健康检查：`http://localhost:3090/api/health`
+### 演示流程
+
+1. 点击"导入测试文章"
+2. 点击"生成今日晚报"
+3. 查看格式化 Markdown 晚报
+4. 点击"推送今日晚报"查看控制台输出
+
+## AI 模式说明
+
+| 模式 | 说明 | 是否需要 API Key |
+|------|------|------------------|
+| `mock` | 默认模式，基于关键词评分，不调用 AI | 否 |
+| `deepseek` | OpenAI 兼容接口（DeepSeek、OpenAI 等） | 是 |
+| `ollama` | 本地 LLM 端点 | 否（本地） |
+
+### DeepSeek / OpenAI 兼容
+
+```env
+AI_PROVIDER=deepseek
+AI_API_BASE_URL=https://api.deepseek.com/v1
+AI_API_KEY=你的 API Key
+AI_MODEL=deepseek-chat
+```
+
+### Ollama 本地
+
+```env
+AI_PROVIDER=ollama
+OLLAMA_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5:3b
+```
+
+当真实 AI 调用失败、超时或返回无效 JSON 时，系统自动回退到 Mock 模式。
+
+## 环境变量说明
+
+复制 `backend/.env.example` 为 `backend/.env` 后按需修改。
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `PORT` | `3090` | 服务端口 |
+| `ENABLE_SCHEDULER` | `false` | 启用每日 22:30 定时任务 |
+| `ENABLE_DAILY_PUSH` | `false` | 定时任务后自动推送 |
+| `AI_PROVIDER` | `mock` | AI 模式：`mock`、`deepseek`、`ollama` |
+| `AI_API_BASE_URL` | - | OpenAI 兼容 API 地址 |
+| `AI_API_KEY` | - | API Key |
+| `AI_MODEL` | - | 模型名称 |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama 端点 |
+| `OLLAMA_MODEL` | `qwen2.5:3b` | Ollama 模型 |
+| `PUSH_PROVIDER` | `console` | 推送模式：`console`、`pushplus`、`email` |
+| `PUSHPLUS_TOKEN` | - | PushPlus Token |
+| `SMTP_HOST` | - | SMTP 服务器地址 |
+| `SMTP_PORT` | - | SMTP 端口 |
+| `SMTP_USER` | - | SMTP 用户名 |
+| `SMTP_PASS` | - | SMTP 密码 |
+| `SMTP_FROM` | - | 发件人邮箱 |
+| `SMTP_TO` | - | 收件人邮箱 |
+
+## API 概览
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/health` | 健康检查 |
+| GET | `/api/sources` | 获取数据源列表 |
+| POST | `/api/sources` | 新增数据源 |
+| PATCH | `/api/sources/:id` | 更新数据源 |
+| DELETE | `/api/sources/:id` | 删除数据源 |
+| POST | `/api/sources/:id/test-fetch` | 测试单个数据源 |
+| POST | `/api/fetch` | 抓取全部启用数据源 |
+| GET | `/api/articles` | 获取文章列表 |
+| POST | `/api/articles/import-sample` | 导入测试文章 |
+| POST | `/api/articles/:id/resummarize` | 重新总结单篇文章 |
+| POST | `/api/digest/generate` | 生成今日晚报 |
+| GET | `/api/digest/today` | 获取今日晚报 |
+| POST | `/api/push/today` | 推送今日晚报 |
+| GET | `/api/config/ai` | AI 配置（不含密钥） |
+| GET | `/api/config/push` | 推送配置（不含密钥） |
 
 ## Docker 启动
 
@@ -131,135 +150,37 @@ docker compose up --build
 
 默认映射端口：`3090:3090`
 
-Docker 镜像不会复制 `node_modules`、`.env`、`backend/data/app.db` 或数据库运行文件。SQLite 数据库会在容器运行时生成。
+## 项目亮点
 
-## 环境变量说明
+- **端到端 MVP 设计**：从 RSS 抓取到格式化晚报展示的完整链路
+- **LLM 回退机制**：AI 调用失败时自动回退到 Mock 模式
+- **RSS 抓取与去重**：优雅处理不稳定的数据源
+- **安全 Markdown 渲染**：先 HTML 转义再渲染，URL 过滤危险协议
+- **演示数据刷新**：测试文章支持刷新日期，保证演示时能生成今日晚报
+- **零依赖前端**：无构建工具、无框架，纯原生 JS
 
-复制 `backend/.env.example` 为 `backend/.env` 后按需修改。默认配置不调用真实 AI，也不会真实推送。
+## 当前局限
 
-```env
-PORT=3090
-ENABLE_SCHEDULER=false
-ENABLE_DAILY_PUSH=false
-AI_PROVIDER=mock
-AI_API_BASE_URL=
-AI_API_KEY=
-AI_MODEL=
-OLLAMA_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=qwen2.5:3b
-PUSH_PROVIDER=console
-PUSHPLUS_TOKEN=
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=
-SMTP_TO=
-```
+- 不是生产级 CMS 或内容平台
+- 无用户认证或多用户支持
+- 轻量 Markdown 渲染器只支持基础语法（标题、列表、加粗、链接）
+- 未实现微信公众号自动发布（只有推送出口框架）
+- SQLite 适合本地 MVP，不适合大规模部署
+- 暂无单元测试
 
-`ENABLE_SCHEDULER=true`：开启每天 22:30 的定时任务，自动抓取 RSS 并生成晚报。
+## 后续计划
 
-`ENABLE_DAILY_PUSH=true`：仅在 `ENABLE_SCHEDULER=true` 时生效，表示定时任务生成晚报后自动推送。默认关闭，避免调试时误发。
-
-## AI Provider
-
-mock 模式：默认模式，无需 API Key，按关键词和个人偏好规则生成摘要。
-
-DeepSeek/OpenAI 兼容接口：
-
-```env
-AI_PROVIDER=deepseek
-AI_API_BASE_URL=https://api.deepseek.com/v1
-AI_API_KEY=你的 API Key
-AI_MODEL=deepseek-chat
-```
-
-Ollama 本地模式：
-
-```env
-AI_PROVIDER=ollama
-OLLAMA_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=qwen2.5:3b
-```
-
-真实 AI 调用失败、超时、返回非 JSON 或字段不符合要求时，会自动 fallback 到 mock。
-
-## 推送 Provider
-
-console 模式：默认模式，只在服务端控制台打印今日晚报。
-
-```env
-PUSH_PROVIDER=console
-```
-
-PushPlus：
-
-```env
-PUSH_PROVIDER=pushplus
-PUSHPLUS_TOKEN=你的 PushPlus Token
-```
-
-SMTP 邮箱：
-
-```env
-PUSH_PROVIDER=email
-SMTP_HOST=smtp.example.com
-SMTP_PORT=465
-SMTP_USER=your@example.com
-SMTP_PASS=你的邮箱授权码或密码
-SMTP_FROM=your@example.com
-SMTP_TO=target@example.com
-```
-
-配置缺失时 API 会返回明确错误，不会打印 token 或 password。
-
-## API 总览
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| GET | `/api/health` | 健康检查 |
-| GET | `/api/articles` | 获取文章列表 |
-| POST | `/api/articles/import-sample` | 导入测试文章 |
-| POST | `/api/articles/:id/resummarize` | 重新总结单篇文章 |
-| GET | `/api/sources` | 获取数据源列表 |
-| POST | `/api/sources` | 新增数据源 |
-| PATCH | `/api/sources/:id` | 更新数据源 |
-| DELETE | `/api/sources/:id` | 删除数据源 |
-| POST | `/api/sources/:id/test-fetch` | 测试单个 RSS 源 |
-| POST | `/api/fetch` | 抓取全部启用 RSS 源 |
-| POST | `/api/digest/generate` | 生成今日晚报 |
-| GET | `/api/digest/today` | 获取今日晚报 |
-| POST | `/api/push/today` | 推送今日晚报 |
-| GET | `/api/config/ai` | 查看 AI 模式，不泄露 Key |
-| GET | `/api/config/push` | 查看推送模式，不泄露敏感配置 |
-
-## 推荐演示流程
-
-1. 启动项目：`cd backend && npm run dev`
-2. 打开 `http://localhost:3090`
-3. 点击“导入测试文章”
-4. 添加一个 RSS 源
-5. 点击“测试抓取”预览 RSS 内容
-6. 点击“抓取全部 RSS”写入文章
-7. 点击“生成今日晚报”
-8. 点击单篇文章“重新总结”
-9. 点击“推送今日晚报”，console 模式会打印到服务端控制台
-
-详细脚本见：`docs/demo-script.md`
+- WeWe RSS 实际接入示例
+- 文章搜索与筛选改进
+- 定时任务时间配置
+- GitHub Actions CI
+- 更好的截图和演示视频
+- 单元测试
+- JSON 数据源支持
+- 晚报历史与归档
 
 ## 当前边界说明
 
 本项目不直接爬取微信，不包含微信登录、反爬、绕过访问限制或批量采集微信页面的逻辑。项目只接收 RSS、WeWe RSS 或其他合法、授权、RSS-compatible 的信息源。
 
 如果需要接入公众号内容，推荐在外部合法部署 WeWe RSS 或其他 RSS 生成工具，再把生成的 RSS URL 添加到本项目。
-
-## 后续计划
-
-- WeWe RSS 实际接入示例
-- 真实 PushPlus 推送联调
-- SMTP 邮箱推送联调
-- Docker 部署持久化方案
-- 前端仪表盘增强
-- 个人偏好评分优化
-- JSON 数据源入口
-- 摘要检索、标签和归档
