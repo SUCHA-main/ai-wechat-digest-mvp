@@ -1,6 +1,13 @@
 node_modules/
 .env
+.env.*
+!.env.example
 backend/data/app.db
 backend/data/app.db-*
 *.log
 npm-debug.log*
+dist/
+build/
+coverage/
+.DS_Store
+Thumbs.db
