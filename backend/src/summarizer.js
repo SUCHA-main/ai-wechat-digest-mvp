@@ -4,6 +4,7 @@ const { getAIConfig, runAI } = require('./aiProvider');
 
 const hotKeywords = ['AI', 'ai', '人工智能', '编程', '开源', '物联网', '机器人', '学习'];
 const profilePath = path.join(__dirname, '..', 'data', 'profile.json');
+const profileExamplePath = path.join(__dirname, '..', 'data', 'profile.example.json');
 
 function summarizeWithMock({ title = '', content = '' }, profile = loadProfile()) {
   const text = `${title}\n${content}`;
@@ -138,15 +139,21 @@ function parseStoredSummary(article) {
 }
 
 function loadProfile() {
-  try {
-    return JSON.parse(fs.readFileSync(profilePath, 'utf8'));
-  } catch (error) {
-    return {
-      interests: [],
-      avoid: [],
-      scoring_rule: ''
-    };
+  for (const candidate of [profilePath, profileExamplePath]) {
+    try {
+      return JSON.parse(fs.readFileSync(candidate, 'utf8'));
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        console.warn(`Failed to load profile from ${path.basename(candidate)}: ${error.message}`);
+      }
+    }
   }
+
+  return {
+    interests: [],
+    avoid: [],
+    scoring_rule: ''
+  };
 }
 
 function clampScore(value) {

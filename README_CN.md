@@ -16,11 +16,11 @@
 
 ## 功能特性
 
-- **数据源管理**：新增、启停、删除 RSS/JSON 数据源
+- **数据源管理**：新增、启停、删除 RSS 数据源；JSON 抓取尚未实现
 - **RSS 抓取与去重**：抓取启用的数据源，按 URL 去重入库
 - **测试文章导入**：内置 5 篇模拟文章，支持刷新日期保证演示可用
 - **AI 总结**：支持 Mock（默认）、DeepSeek/OpenAI 兼容接口、本地 Ollama
-- **个人偏好评分**：`profile.json` 参与 AI prompt 和 Mock 评分
+- **个人偏好评分**：本地 `profile.json` 参与 AI prompt 和 Mock 评分；不存在时使用 `profile.example.json`
 - **Markdown 晚报生成**：按重要性分为"今日最值得看 / 可以快速扫一眼 / 可以跳过"
 - **格式化晚报展示**：前端渲染 Markdown，支持标题、列表、加粗、链接
 - **页面内提示**：成功/错误/信息提示替代 alert 弹窗
@@ -58,11 +58,13 @@ flowchart TD
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run dev
 ```
 
 访问：`http://localhost:3090`
+
+如果没有本地偏好文件，程序会使用 `backend/data/profile.example.json`。需要自定义时，将它复制为 `backend/data/profile.json` 后修改。本地 profile 和 SQLite 运行文件都已被 Git 忽略，也不会进入 Docker 构建。
 
 ### 演示流程
 
@@ -150,6 +152,34 @@ docker compose up --build
 
 默认映射端口：`3090:3090`
 
+当前 Compose 配置用于一次性本地演示，没有挂载持久化数据库卷。删除并重新创建容器会重置其中的 SQLite 数据。
+
+## 本地数据边界
+
+- `backend/data/app.db` 及 SQLite WAL/SHM 文件由本地运行生成并被忽略。
+- `backend/data/profile.json` 是本地偏好配置并被忽略；仓库只跟踪脱敏结构示例 `profile.example.json`。
+- `backend/data/sources.json` 只包含公开演示 RSS seed；通过页面新增的数据源保存在本地 SQLite。
+- 抓取文章和生成晚报都存储在 SQLite 中，不以生成文件形式提交。
+- `.env`、API Key、PushPlus Token 和 SMTP 凭据必须保留在本地。
+
+## 项目截图
+
+### 首页
+
+![首页](./docs/images/home.png)
+
+### 数据源管理
+
+![数据源管理](./docs/images/sources.png)
+
+### 晚报生成
+
+![晚报生成](./docs/images/digest.png)
+
+### 控制台推送结果
+
+![推送结果](./docs/images/push.png)
+
 ## 项目亮点
 
 - **端到端 MVP 设计**：从 RSS 抓取到格式化晚报展示的完整链路
@@ -184,3 +214,7 @@ docker compose up --build
 本项目不直接爬取微信，不包含微信登录、反爬、绕过访问限制或批量采集微信页面的逻辑。项目只接收 RSS、WeWe RSS 或其他合法、授权、RSS-compatible 的信息源。
 
 如果需要接入公众号内容，推荐在外部合法部署 WeWe RSS 或其他 RSS 生成工具，再把生成的 RSS URL 添加到本项目。
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。

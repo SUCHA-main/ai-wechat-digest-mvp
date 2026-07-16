@@ -22,8 +22,6 @@ Console push result:
 
 ![Push result](./docs/images/push.png)
 
-> Screenshots will be updated after the final demo capture.
-
 ## Why This Project
 
 Technical readers follow many RSS feeds, public accounts, and community updates every day. The information volume is high, but most content does not deserve deep reading. This project explores a lightweight personal digest workflow:
@@ -40,7 +38,7 @@ Technical readers follow many RSS feeds, public accounts, and community updates 
 - **RSS fetch and deduplication**: fetch enabled sources, deduplicate by URL
 - **Sample article import**: import demo articles, refresh dates for demo readiness
 - **AI summarization**: mock (default), DeepSeek/OpenAI-compatible, Ollama local LLM
-- **Personal profile scoring**: `profile.json` influences AI prompt and mock scoring
+- **Personal profile scoring**: local `profile.json` (falling back to `profile.example.json`) influences AI prompt and mock scoring
 - **Markdown daily digest**: grouped by importance (must-read / quick-scan / skippable)
 - **Formatted digest rendering**: frontend renders Markdown with proper headings, lists, and links
 - **Page-level notice feedback**: success/error/info notices instead of alert popups
@@ -78,11 +76,13 @@ Node.js `22.5+` is recommended because this project uses Node's built-in SQLite 
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run dev
 ```
 
 Open `http://localhost:3090`.
+
+The app uses `backend/data/profile.example.json` when no local profile exists. Copy it to `backend/data/profile.json` to customize preferences. The local profile and SQLite runtime files are ignored by Git and excluded from Docker builds.
 
 ### Demo Flow
 
@@ -170,6 +170,16 @@ docker compose up --build
 
 The app is exposed at `http://localhost:3090`.
 
+The current Compose file is intended for a disposable local demo and does not mount a persistent database volume. Removing and recreating the container resets its SQLite data.
+
+## Local Data Boundaries
+
+- `backend/data/app.db` and its SQLite WAL/SHM files are generated locally and ignored.
+- `backend/data/profile.json` is a local preference file and ignored; `profile.example.json` is the tracked, sanitized structure example.
+- `backend/data/sources.json` contains public demo RSS seeds. Sources added through the UI are stored in the local SQLite database.
+- Generated articles and digests are stored in SQLite, not committed as files.
+- `.env` files, API keys, PushPlus tokens, and SMTP credentials must remain local.
+
 ## What I Learned
 
 - **End-to-end MVP design**: from RSS ingestion to formatted digest display
@@ -202,3 +212,7 @@ The app is exposed at `http://localhost:3090`.
 ## Disclaimer
 
 This project does not scrape WeChat directly. It does not include WeChat login, anti-bot bypassing, or restricted-content scraping logic. It only consumes RSS-compatible feeds, including WeWe RSS or other lawful sources provided by the user.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

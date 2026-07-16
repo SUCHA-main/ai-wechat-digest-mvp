@@ -4,6 +4,7 @@ backend/node_modules
 backend/.env
 backend/data/app.db
 backend/data/app.db-*
+backend/data/profile.json
 .git
 *.log
 npm-debug.log*

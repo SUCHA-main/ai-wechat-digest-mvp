@@ -1,0 +1,12 @@
+{
+  "interests": [
+    "AI engineering",
+    "open-source tools",
+    "software development"
+  ],
+  "avoid": [
+    "pure marketing",
+    "duplicate news"
+  ],
+  "scoring_rule": "Prioritize practical technical content, reproducible examples, and clear implementation details."
+}

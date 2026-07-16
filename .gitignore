@@ -4,6 +4,7 @@ node_modules/
 !.env.example
 backend/data/app.db
 backend/data/app.db-*
+backend/data/profile.json
 *.log
 npm-debug.log*
 dist/
